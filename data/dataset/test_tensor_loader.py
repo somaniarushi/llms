@@ -1,7 +1,10 @@
-from data.dataset.tensor_loader import TensorDatasetProvider, TensorDataset
-from data.dataset.base import Batch
-from data.tokenizer.json_tokenizer import BaseJSONTokenizer
+from __future__ import annotations
+
 import torch
+
+from data.dataset.base import Batch
+from data.dataset.tensor_loader import TensorDataset, TensorDatasetProvider
+from data.tokenizer.json_tokenizer import BaseJSONTokenizer
 
 SPLIT_ERROR_MARGIN = 1e-4
 
@@ -16,10 +19,12 @@ class TestTensorDataset:
             split=0.9,
         )
         assert isinstance(
-            dataset.train, TensorDataset
+            dataset.train,
+            TensorDataset,
         ), "Expected train dataset to be a TensorDataset"
         assert isinstance(
-            dataset.val, TensorDataset
+            dataset.val,
+            TensorDataset,
         ), "Expected val dataset to be a TensorDataset"
 
         assert dataset.train.data.shape == (4, 31370, 8)
@@ -35,7 +40,8 @@ class TestTensorDataset:
 
         # First batch, first sequence
         assert torch.allclose(
-            dataset.train.data[0][0], torch.tensor([49, 9, 7, 6, 2, 0, 37, 9])
+            dataset.train.data[0][0],
+            torch.tensor([49, 9, 7, 6, 2, 0, 37, 9]),
         )
         assert dataset.tokenizer.decode(dataset.train.data[0][0]) == "First Ci"
 
@@ -51,7 +57,13 @@ class TestTensorDataset:
         assert isinstance(batch, Batch)
         assert batch.input.shape == (4, 8)
         assert batch.target.shape == (4, 8)
-        assert torch.allclose(batch.input[0], torch.tensor([49, 9, 7, 6, 2, 0, 37, 9]))
-        assert torch.allclose(batch.target[0], torch.tensor([9, 7, 6, 2, 0, 37, 9, 66]))
+        assert torch.allclose(
+            batch.input[0],
+            torch.tensor([49, 9, 7, 6, 2, 0, 37, 9]),
+        )
+        assert torch.allclose(
+            batch.target[0],
+            torch.tensor([9, 7, 6, 2, 0, 37, 9, 66]),
+        )
         assert dataset.tokenizer.decode(batch.input[0]) == "First Ci"
         assert dataset.tokenizer.decode(batch.target[0]) == "irst Ci|PADDING|"

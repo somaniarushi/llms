@@ -1,4 +1,6 @@
-from data.dataset.tensor_loader import TensorDatasetProvider, TensorDataset
+from __future__ import annotations
+
+from data.dataset.tensor_loader import TensorDatasetProvider
 from data.tokenizer.json_tokenizer import BaseJSONTokenizer
 
 max_seq_len = 8
@@ -19,9 +21,12 @@ first_target = target[0]
 assert len(first_input) == len(first_target) == 8
 print("In token space:")
 for i in range(max_seq_len):
-    print(f"When input is {first_input[:i].tolist()}, target is {first_target[i]}")
+    print(
+        f"When input is {first_input[:i].tolist()}, target is {first_target[i]}",
+    )
 print("In character space:")
 for i in range(max_seq_len):
     print(
-        f"When input is {tokenizer.decode(first_input[:i])}, target is {tokenizer.decode([first_target[i]])}"
+        f"When input is {tokenizer.decode(first_input[:i])} "
+        "target is {tokenizer.decode([first_target[i]])}",
     )

@@ -1,11 +1,15 @@
-from pathlib import Path
-from torch.utils.data import Dataset
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from data.tokenizer.base import BaseTokenizer
-from typing import NamedTuple, Any, Tuple
-import torch
 from enum import Enum
 from functools import partial
+from pathlib import Path
+from typing import Any, NamedTuple
+
+import torch
+from torch.utils.data import Dataset
+
+from data.tokenizer.base import BaseTokenizer
 
 
 class Batch(NamedTuple):
@@ -43,17 +47,9 @@ class TrainValidationData(NamedTuple):
 class BaseDatasetProvider(ABC):
     """
     Defines a dataset that can be used for training a model.
-    When normally instantiated, the getitem function of the dataset will return a batch of data, each
-    of shape (batch_size, max_seq_len). The input and target tensors will be offset by one timestep.
-
-    The dataset can be put "in validation mode" by using the validation_mode context manager. This will
-    cause the getitem function to return a batch of data, each of shape (batch_size, max_seq_len) from the
-    validation cut of the data.
-    Usage:
-    dataset.validation()
-
-    An error will be raised if validation code is used when split == 1.0.
-
+    When normally instantiated, the getitem function of the dataset will return
+    a batch of data, each of shape (batch_size, max_seq_len).
+    The input and target tensors will be offset by one timestep.
     """
 
     @classmethod
@@ -65,7 +61,7 @@ class BaseDatasetProvider(ABC):
         batch_size: int = 4,
         split: float = 0.9,
     ) -> TrainValidationData:
-        data = cls.load_data(data_file, tokenizer)
+        data = cls.load_data(Path(data_file), tokenizer)
         raw_train_data, raw_val_data = cls.split_data(data, split)
         data_formatter = partial(
             cls.reformat_data,

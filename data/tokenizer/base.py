@@ -1,29 +1,31 @@
-import json
-from functools import lru_cache
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Dict, List
 from pathlib import Path
 
 
 class BaseTokenizer(ABC):
     def __init__(
-        self, vocab_file: str, eot: str = "|ENDOFTEXT|", padding: str = "|PADDING|"
+        self,
+        vocab_file: str,
+        eot: str = "|ENDOFTEXT|",
+        padding: str = "|PADDING|",
     ) -> None:
         self.vocab_file = Path(vocab_file)
-        self.vocab = self.load_vocab(vocab_file)
+        self.vocab = self.load_vocab(self.vocab_file)
         self.eot = eot
         self.padding = padding
 
     @abstractmethod
-    def load_vocab(self, vocab_file: Path) -> Dict[str, int]:
+    def load_vocab(self, vocab_file: Path) -> dict[str, int]:
         raise NotImplementedError
 
     @abstractmethod
-    def encode(self, text: str) -> List[int]:
+    def encode(self, text: str) -> list[int]:
         raise NotImplementedError
 
     @abstractmethod
-    def decode(self, tokens: List[int]) -> str:
+    def decode(self, tokens: list[int]) -> str:
         raise NotImplementedError
 
     @abstractmethod

@@ -1,5 +1,9 @@
-import pytest
+from __future__ import annotations
+
 from pathlib import Path
+
+import pytest
+
 from data.tokenizer.json_tokenizer import BaseJSONTokenizer
 
 ALL_CHARACTER_VOCAB_FILE = Path("data/tokenizer/all_chars.json")

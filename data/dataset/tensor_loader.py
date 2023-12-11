@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 from pathlib import Path
-from data.dataset.base import BaseDatasetProvider, BaseDataset, Batch, Mode
-from data.tokenizer.base import BaseTokenizer
+
 import torch
+
+from data.dataset.base import BaseDataset, BaseDatasetProvider, Batch
+from data.tokenizer.base import BaseTokenizer
 
 
 class TensorDataset(BaseDataset):
@@ -19,7 +23,8 @@ class TensorDataset(BaseDataset):
         # add a padding token to the end of the target tensor
         padding_token = self.tokenizer.padding_token
         target = torch.cat(
-            [target, torch.tensor([[padding_token]] * len(target))], dim=1
+            [target, torch.tensor([[padding_token]] * len(target))],
+            dim=1,
         )
         return Batch(input, target)
 
@@ -27,8 +32,9 @@ class TensorDataset(BaseDataset):
 class TensorDatasetProvider(BaseDatasetProvider):
     """
     Defines a dataset that can be used for training a model.
-    Returns two datasets, one for training and one for validation—each of which can be used to get batches of data
-    of shape (batch_size, max_seq_len). The input and target tensors will be offset by one timestep.
+    Returns two datasets, one for training and one for validation—each of
+    which can be used to get batches of data of shape (batch_size, max_seq_len).
+    The input and target tensors will be offset by one timestep.
     """
 
     def __init__(self) -> None:
@@ -43,7 +49,8 @@ class TensorDatasetProvider(BaseDatasetProvider):
         tokenizer: BaseTokenizer,
     ) -> TensorDataset:
         """
-        Given a tensor of shape (full_len,), return a tensor of shape (full_len // batch_size, batch_size, max_seq_len)
+        Given a tensor of shape (full_len,), return a tensor of shape
+        (full_len // batch_size, batch_size, max_seq_len)
         """
         # Truncate data so that it is evenly divisible by batch_size * max_seq_len
         if len(data) % (batch_size * max_seq_len) != 0:
@@ -62,7 +69,10 @@ class TensorDatasetProvider(BaseDatasetProvider):
 
     @classmethod
     def load_data(cls, data_file: Path, tokenizer: BaseTokenizer) -> torch.Tensor:
-        with open(data_file, "r") as f:
+        with open(data_file) as f:
             raw_data = f.read()
-        data = torch.tensor(tokenizer.encode(raw_data), dtype=torch.long)  #  (1115394,)
+        data = torch.tensor(
+            tokenizer.encode(raw_data),
+            dtype=torch.long,
+        )  # (1115394,)
         return data

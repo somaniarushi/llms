@@ -13,28 +13,31 @@ repos:
     rev: v2.5.0
     hooks:
     -   id: setup-cfg-fmt
--   repo: https://github.com/asottile/reorder-python-imports
-    rev: v3.12.0
-    hooks:
-    -   id: reorder-python-imports
-        args: [--py38-plus, --add-import, 'from __future__ import annotations']
 -   repo: https://github.com/asottile/add-trailing-comma
     rev: v3.1.0
     hooks:
     -   id: add-trailing-comma
--   repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.0
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.0.275
     hooks:
-    -   id: pyupgrade
-        args: [--py38-plus]
--   repo: https://github.com/hhatto/autopep8
-    rev: v2.0.4
-    hooks:
-    -   id: autopep8
--   repo: https://github.com/PyCQA/flake8
-    rev: 6.1.0
-    hooks:
-    -   id: flake8
+      - id: ruff
+        # union of black + isort tools; and a few files that have pylint exclusions.
+        args: [--fix, --exit-non-zero-on-fix]
+- repo: https://github.com/psf/black
+  rev: 22.8.0
+  hooks:
+    - id: black
+      language: python
+      types: [python]
+
+
+- repo: https://github.com/pycqa/isort
+  rev: 5.12.0
+  hooks:
+    - id: isort
+      name: isort
+
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.7.1
     hooks:
