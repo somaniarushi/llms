@@ -19,7 +19,9 @@ class BigramLanguageModel(nn.Module):
         self.embedding = nn.Embedding(vocab_size, vocab_size)
 
     def forward(
-        self, idx: torch.Tensor, targets: Optional[torch.Tensor] = None,
+        self,
+        idx: torch.Tensor,
+        targets: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         """
         Given a batch of sequences of tokens, idx,
@@ -46,8 +48,9 @@ class BigramLanguageModel(nn.Module):
         tokens for each sequence in the batch.
         """
         # idx is (1, seq_len) tensor of integers
-        assert idx.dim() == 2 and idx.shape[0] == 1, \
-            f'idx should be (1, seq_len) but got {idx.shape}'
+        assert (
+            idx.dim() == 2 and idx.shape[0] == 1
+        ), f'idx should be (1, seq_len) but got {idx.shape}'
         logits, _ = self.forward(idx)
         probs = F.softmax(logits, dim=-1)
         new_tokens = torch.multinomial(probs, max_new_tokens)

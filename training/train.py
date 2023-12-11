@@ -1,7 +1,9 @@
+import argparse
 from typing import NamedTuple
 
 import torch
 import torch.nn as nn
+import yaml
 
 from data.dataset.base import BaseDataset
 from data.dataset.tensor_loader import TensorDatasetProvider
@@ -9,6 +11,16 @@ from data.tokenizer.base import BaseTokenizer
 from data.tokenizer.json_tokenizer import BaseJSONTokenizer
 from model.bigram import BigramLanguageModel
 from training.checkpointing import save_checkpoint
+
+STR2MODEL = {
+    'bigram': BigramLanguageModel,
+}
+
+
+def load_yaml(config_file: str) -> dict:
+    with open(config_file) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    return config
 
 
 class TrainingConfig(NamedTuple):
@@ -19,8 +31,11 @@ class TrainingConfig(NamedTuple):
     vocab_file: str
     data_file: str
     save_path: str
-    model_cls: nn.Module
+    model_str: str
     seed: int = 42
+
+    def __post_init__(self) -> None:
+        assert self.model_str in STR2MODEL, f'Invalid model string {self.model_str}'
 
 
 def train(
@@ -90,7 +105,8 @@ def launch_training(
         split=config.split,
     )
     # create the model
-    model = config.model_cls(vocab_size=len(tokenizer))
+    model_cls = STR2MODEL[config.model_str]
+    model = model_cls(vocab_size=len(tokenizer))
 
     # create the optimizer
     optimizer = torch.optim.Adam(model.parameters())
@@ -110,17 +126,12 @@ def launch_training(
 
 
 if __name__ == '__main__':
-    config = TrainingConfig(
-        iterations=10000,
-        max_seq_len=8,
-        batch_size=4,
-        split=0.9,
-        vocab_file='data/tokenizer/all_chars.json',
-        data_file='data/corpus/shakespeare.txt',
-        save_path='training/checkpoints/bigram.pt',
-        model_cls=BigramLanguageModel,
-    )
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config', type=str, required=True)
+    args = parser.parse_args()
+    config = TrainingConfig(**load_yaml(args.config))
     model = launch_training(config)
     print(
-        'the', generate(model, 'the', BaseJSONTokenizer(vocab_file=config.vocab_file)),
+        'the',
+        generate(model, 'the', BaseJSONTokenizer(vocab_file=config.vocab_file)),
     )
