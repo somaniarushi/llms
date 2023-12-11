@@ -7,6 +7,7 @@ import torch
 from enum import Enum
 from functools import partial
 
+
 class Batch(NamedTuple):
     input: torch.Tensor
     target: torch.Tensor
@@ -15,6 +16,7 @@ class Batch(NamedTuple):
 class Mode(Enum):
     TRAIN = "train"
     VAL = "val"
+
 
 class BaseDataset(Dataset, ABC):
     def __init__(
@@ -29,12 +31,14 @@ class BaseDataset(Dataset, ABC):
     def __getitem__(self, index) -> Any:
         raise NotImplementedError
 
+
 class TrainValidationData(NamedTuple):
     train: BaseDataset
     val: BaseDataset
     split: float
     max_seq_len: int
     tokenizer: BaseTokenizer
+
 
 class BaseDatasetProvider(ABC):
     """
@@ -63,15 +67,30 @@ class BaseDatasetProvider(ABC):
     ) -> TrainValidationData:
         data = cls.load_data(data_file, tokenizer)
         raw_train_data, raw_val_data = cls.split_data(data, split)
-        data_formatter = partial(cls.reformat_data, batch_size=batch_size, max_seq_len=max_seq_len, tokenizer=tokenizer)
+        data_formatter = partial(
+            cls.reformat_data,
+            batch_size=batch_size,
+            max_seq_len=max_seq_len,
+            tokenizer=tokenizer,
+        )
         train_data = data_formatter(raw_train_data)
         val_data = data_formatter(raw_val_data)
-        return TrainValidationData(train=train_data, val=val_data, split=split, max_seq_len=max_seq_len, tokenizer=tokenizer)
+        return TrainValidationData(
+            train=train_data,
+            val=val_data,
+            split=split,
+            max_seq_len=max_seq_len,
+            tokenizer=tokenizer,
+        )
 
     @classmethod
     @abstractmethod
     def reformat_data(
-        cls, data: torch.Tensor, batch_size: int, max_seq_len: int, tokenizer: BaseTokenizer,
+        cls,
+        data: torch.Tensor,
+        batch_size: int,
+        max_seq_len: int,
+        tokenizer: BaseTokenizer,
     ) -> BaseDataset:
         raise NotImplementedError
 

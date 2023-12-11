@@ -2,9 +2,9 @@ from data.dataset.tensor_loader import TensorDatasetProvider, TensorDataset
 from data.tokenizer.json_tokenizer import BaseJSONTokenizer
 
 max_seq_len = 8
-tokenizer = BaseJSONTokenizer('data/tokenizer/all_chars.json')
+tokenizer = BaseJSONTokenizer("data/tokenizer/all_chars.json")
 data = TensorDatasetProvider.get_train_and_val_data(
-    data_file='data/corpus/shakespeare.txt',
+    data_file="data/corpus/shakespeare.txt",
     tokenizer=tokenizer,
     max_seq_len=max_seq_len,
     batch_size=4,
@@ -22,4 +22,6 @@ for i in range(max_seq_len):
     print(f"When input is {first_input[:i].tolist()}, target is {first_target[i]}")
 print("In character space:")
 for i in range(max_seq_len):
-    print(f"When input is {tokenizer.decode(first_input[:i])}, target is {tokenizer.decode([first_target[i]])}")
+    print(
+        f"When input is {tokenizer.decode(first_input[:i])}, target is {tokenizer.decode([first_target[i]])}"
+    )

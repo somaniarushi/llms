@@ -4,9 +4,10 @@ import json
 import fire
 from collections import Counter
 
+
 def get_all_characters_as_tokens(
-        corpus_file: Path,
-        ) -> List[str]:
+    corpus_file: Path,
+) -> List[str]:
     """
     Given a corpus file, which is a .txt file containing the corpus,
     get all the unique characters from the txt file.
@@ -22,11 +23,10 @@ def get_all_characters_as_tokens(
     # Return the tokens
     return tokens
 
+
 def _create_tokenzizer_from_txt(
-    corpus_file: Path,
-    vocab_file: Path,
-    sampling_function: Callable[[Path], List[str]]
-    ) -> bool:
+    corpus_file: Path, vocab_file: Path, sampling_function: Callable[[Path], List[str]]
+) -> bool:
     """
     Given a corpus file, which is a .txt file containing the corpus, and a sampling function,
     return the vocab file for the corpus.
@@ -41,17 +41,20 @@ def _create_tokenzizer_from_txt(
     # Return the response
     return True
 
+
 def create_simple_tokenizer(
-        corpus_file: str,
-        vocab_file: str,
-        sampling_strategy: str,
-        ) -> bool:
+    corpus_file: str,
+    vocab_file: str,
+    sampling_strategy: str,
+) -> bool:
     """
     Given a corpus file, create a vocab file for it using the
     provided sampling strategy.
     Currently only accepts .txt files and all-characters sampling strategy.
     """
-    assert sampling_strategy == "all_characters", "Only all_characters sampling strategy is supported."
+    assert (
+        sampling_strategy == "all_characters"
+    ), "Only all_characters sampling strategy is supported."
     corpus_file = Path(corpus_file)
     # Assert that the corpus file exists and is a .txt file
     assert corpus_file.exists()
@@ -64,8 +67,11 @@ def create_simple_tokenizer(
     assert vocab_file.suffix == ".json", "Only .json vocab files are supported."
 
     # Create the vocab file
-    response = _create_tokenzizer_from_txt(corpus_file, vocab_file, get_all_characters_as_tokens)
+    response = _create_tokenzizer_from_txt(
+        corpus_file, vocab_file, get_all_characters_as_tokens
+    )
     return response
+
 
 if __name__ == "__main__":
     fire.Fire(create_simple_tokenizer)

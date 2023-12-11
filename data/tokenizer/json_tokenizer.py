@@ -1,4 +1,3 @@
-
 from pathlib import Path
 from typing import List, Dict
 import json
@@ -6,11 +5,13 @@ from functools import lru_cache
 
 from data.tokenizer.base import BaseTokenizer
 
+
 class BaseJSONTokenizer(BaseTokenizer):
     """
     Base Tokenizer class that assumes the the vocab file is a JSON file,
     where the keys are the tokens and the values are the indices.
     """
+
     def load_vocab(self, vocab_file: Path) -> Dict[str, int]:
         with open(vocab_file, "r") as f:
             vocab = json.load(f)
@@ -19,8 +20,9 @@ class BaseJSONTokenizer(BaseTokenizer):
     def encode(self, text: str) -> List[int]:
         # Given string, make list of single characters
         chars = list(text)
-        assert all(len(char) == 1 for char in chars), \
-            "Input text must be a string of single characters."
+        assert all(
+            len(char) == 1 for char in chars
+        ), "Input text must be a string of single characters."
         return [self.stoi(token) for token in chars]
 
     def decode(self, tokens: List[int]) -> str:
