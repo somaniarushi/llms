@@ -8,13 +8,16 @@ class BaseTokenizer(ABC):
     def __init__(
         self,
         vocab_file: str,
-        eot: str = "|ENDOFTEXT|",
-        padding: str = "|PADDING|",
+        eot: str = '|ENDOFTEXT|',
+        padding: str = '|PADDING|',
     ) -> None:
         self.vocab_file = Path(vocab_file)
         self.vocab = self.load_vocab(self.vocab_file)
         self.eot = eot
         self.padding = padding
+
+    def __len__(self) -> int:
+        return len(self.vocab)
 
     @abstractmethod
     def load_vocab(self, vocab_file: Path) -> dict[str, int]:

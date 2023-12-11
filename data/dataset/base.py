@@ -18,8 +18,8 @@ class Batch(NamedTuple):
 
 
 class Mode(Enum):
-    TRAIN = "train"
-    VAL = "val"
+    TRAIN = 'train'
+    VAL = 'val'
 
 
 class BaseDataset(Dataset, ABC):
@@ -35,6 +35,8 @@ class BaseDataset(Dataset, ABC):
     def __getitem__(self, index) -> Any:
         raise NotImplementedError
 
+    def __iter__(self):
+        return iter(self.data)
 
 class TrainValidationData(NamedTuple):
     train: BaseDataset
