@@ -24,14 +24,6 @@ repos:
       - id: ruff
         # union of black + isort tools; and a few files that have pylint exclusions.
         args: [--fix, --exit-non-zero-on-fix]
-- repo: https://github.com/psf/black
-  rev: 22.8.0
-  hooks:
-    - id: black
-      language: python
-      types: [python]
-
-
 - repo: https://github.com/pycqa/isort
   rev: 5.12.0
   hooks:
