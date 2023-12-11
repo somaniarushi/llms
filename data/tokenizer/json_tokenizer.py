@@ -17,7 +17,11 @@ class BaseJSONTokenizer(BaseTokenizer):
         return vocab
 
     def encode(self, text: str) -> List[int]:
-        return [self.stoi(token) for token in list(text)]
+        # Given string, make list of single characters
+        chars = list(text)
+        assert all(len(char) == 1 for char in chars), \
+            "Input text must be a string of single characters."
+        return [self.stoi(token) for token in chars]
 
     def decode(self, tokens: List[int]) -> str:
         return "".join([self.itos(token) for token in tokens])
@@ -33,3 +37,7 @@ class BaseJSONTokenizer(BaseTokenizer):
             if idx == index:
                 return token
         raise ValueError(f"Index {index} not in vocab.")
+
+    @property
+    def end_of_text(self) -> str:
+        return self.stoi()
