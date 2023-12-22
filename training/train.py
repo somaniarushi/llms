@@ -3,9 +3,9 @@ from typing import NamedTuple
 
 import torch
 import torch.nn as nn
-import wandb
 import yaml
 
+import wandb
 from data.dataset.base import BaseDataset
 from data.dataset.tensor_loader import TensorDatasetProvider
 from data.tokenizer.base import BaseTokenizer
@@ -56,9 +56,8 @@ def get_validation_loss(
     """
     Compute the validation loss and print it out.
     """
-    # set the model to eval mode
     model.eval()
-    # compute the validation loss
+
     total_loss = 0
     for i in range(len(validation)):
         batch = validation[i]
@@ -66,7 +65,8 @@ def get_validation_loss(
         target_tokens = batch.target
         _, loss = model(input_tokens, target_tokens)
         total_loss += loss.item()
-    # print the validation loss
+
+    model.train()
     return total_loss / len(validation)
 
 def log_data_to_wandb(
@@ -90,7 +90,7 @@ def train(
     optimizer: torch.optim.Optimizer,
     eval_iterations: int = 100,
     loss_log_iterations: int = 10,
-    log_iterations: int = 100,
+    log_iterations: int = 5000,
 ) -> None:
     """
     Train the model for the specified number of iterations.
