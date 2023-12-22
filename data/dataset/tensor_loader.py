@@ -10,6 +10,8 @@ from data.tokenizer.base import BaseTokenizer
 
 class TensorDataset(BaseDataset):
     def __getitem__(self, index: int) -> Batch:
+        # Modulo the index by the number of batches
+        index = index % len(self.data)
         # Return a batch of data of the shape (batch_size, max_seq_len)
         # The input and target tensors should be offset by one timestep
         # from each other.
@@ -55,7 +57,7 @@ class TensorDatasetProvider(BaseDatasetProvider):
         # Truncate data so that it is evenly divisible by batch_size * max_seq_len
         if len(data) % (batch_size * max_seq_len) != 0:
             data = data[: -(len(data) % (batch_size * max_seq_len))]
-            print(f"WARN: Truncated data to length {len(data)}")
+            print(f'WARN: Truncated data to length {len(data)}')
         # Add a batch dimension
         data = data.unsqueeze(0)
         # Reshape data to be (batch_size, full_len // batch_size, max_seq_len)

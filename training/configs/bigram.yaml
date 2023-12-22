@@ -1,4 +1,4 @@
-iterations: 10000
+iterations: 100000
 max_seq_len: 8
 batch_size: 4
 split: 0.9
