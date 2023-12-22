@@ -24,7 +24,8 @@ class TensorDataset(BaseDataset):
 
     def __getitem__(self, index: int) -> Batch:
         # TODO: Implement the ability to wrap and do epochs
-
+        if index >= len(self.data):
+            index = index % len(self.data)
         # Return a batch of data of the shape (batch_size, max_seq_len)
         # The input and target tensors should be offset by one timestep
         # from each other.

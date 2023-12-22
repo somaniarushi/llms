@@ -1,6 +1,6 @@
-iterations: 0
+iterations: 30000
 max_seq_len: 8
-batch_size: 4
+batch_size: 32
 split: 0.9
 vocab_file: "data/tokenizer/all_chars.json"
 data_file: "data/corpus/shakespeare.txt"

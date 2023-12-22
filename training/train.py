@@ -110,7 +110,7 @@ def launch_training(
     model = model_cls(vocab_size=len(tokenizer))
 
     # create the optimizer
-    optimizer = torch.optim.Adam(model.parameters())
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
     # train the model
     train(

@@ -25,7 +25,7 @@ class BigramLanguageModel(nn.Module):
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         """
         Given a batch of sequences of tokens, idx,
-        ßpredict the next token in the sequence.
+        predict the next token in the sequence.
         If targets is provided, compute the cross-entropy loss between the predicted
         next token and the actual next token.
         Else, return the logits for the next token.
@@ -33,13 +33,14 @@ class BigramLanguageModel(nn.Module):
         assert idx.dim() == 2
         # idx and targets are both (batch, seq_len) tensor of integers
         logits = self.embedding(idx)  # (batch, seq_len, vocab_size)
-        b, s, c = logits.shape
-        logits = logits.view(b * s, c)  # Flatten the batch and sequence dimensions
 
-        if targets is None:
+        if targets is None: # Doing inference
             return logits, None
         else:
-            loss = F.cross_entropy(logits, targets.view(b * s))  # Flatten the targets
+            batch, seqlen, vocab_size = logits.shape
+            # Flatten the batch and sequence dimensions
+            logits = logits.view(batch * seqlen, vocab_size) # (all_embdings, vocab_size)
+            loss = F.cross_entropy(logits, targets.reshape(batch * seqlen))  # Flatten the targets
             return logits, loss
 
     def generate(self, idx: torch.Tensor, max_new_tokens: int) -> torch.Tensor:
@@ -51,7 +52,14 @@ class BigramLanguageModel(nn.Module):
         assert (
             idx.dim() == 2 and idx.shape[0] == 1
         ), f'idx should be (1, seq_len) but got {idx.shape}'
-        logits, _ = self.forward(idx)
-        probs = F.softmax(logits, dim=-1)
-        new_tokens = torch.multinomial(probs, max_new_tokens, replacement=True)
-        return new_tokens
+        for _ in range(max_new_tokens):
+            logits, _ = self.forward(idx)
+            assert logits.dim() == 3, (
+                f'Expected logits to be (1, seq_len, vocab_size) but got {logits.shape}'
+            )
+            # Only focus on the last step
+            logits = logits[:, -1, :]
+            probs = F.softmax(logits, dim=-1)
+            idx_next = torch.multinomial(probs, num_samples=1)
+            idx = torch.cat([idx, idx_next], dim=-1)
+        return idx
