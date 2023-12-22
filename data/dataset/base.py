@@ -38,6 +38,9 @@ class BaseDataset(Dataset, ABC):
     def __iter__(self):
         return iter(self.data)
 
+    def __len__(self):
+        return len(self.data)
+
 
 class TrainValidationData(NamedTuple):
     train: BaseDataset
