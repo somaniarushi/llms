@@ -9,7 +9,7 @@ class BaseTokenizer(ABC):
         self,
         vocab_file: str,
         eot: str = '|ENDOFTEXT|',
-        padding: str = '|PADDING|',
+        padding: str = ' ', # TODO: Change to |PAD| token on which we don't take loss
     ) -> None:
         self.vocab_file = Path(vocab_file)
         self.vocab = self.load_vocab(self.vocab_file)

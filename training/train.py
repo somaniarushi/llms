@@ -76,13 +76,14 @@ def generate(
     model: nn.Module,
     input_str: str,
     tokenizer: BaseTokenizer,
+    num_tokens: int = 10,
 ):
     # set the model to eval mode
     model.eval()
     # generate some text
     input_tokens = tokenizer.encode(input_str)
     input_tokens = torch.tensor(input_tokens).unsqueeze(0)
-    generated_tokens = model.generate(input_tokens, 10)
+    generated_tokens = model.generate(input_tokens, num_tokens)
     generated_text = tokenizer.decode(generated_tokens[0].tolist())
     return generated_text
 
@@ -133,5 +134,10 @@ if __name__ == '__main__':
     model = launch_training(config)
     print(
         'the',
-        generate(model, 'the', BaseJSONTokenizer(vocab_file=config.vocab_file)),
+        generate(
+            model,
+            'the',
+            BaseJSONTokenizer(vocab_file=config.vocab_file),
+            num_tokens=500,
+        ),
     )

@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 import json
-from collections import Counter
 from pathlib import Path
-from typing import Callable
+from typing import Callable, List
 
 import fire
 
 
 def get_all_characters_as_tokens(
     corpus_file: Path,
-) -> list[str]:
+) -> List[str]:
     """
     Given a corpus file, which is a .txt file containing the corpus,
     get all the unique characters from the txt file.
@@ -18,13 +17,7 @@ def get_all_characters_as_tokens(
     # Read the corpus file
     with open(corpus_file) as f:
         corpus = f.read()
-    # Get all the unique characters and sort by frequency
-    tokens_and_frequencies: Counter = Counter()
-    for char in corpus:
-        tokens_and_frequencies[char] += 1
-    tokens = [token for token, _ in tokens_and_frequencies.most_common()]
-    # Return the tokens
-    return tokens
+    return sorted(list(set(corpus)))
 
 
 def _create_tokenzizer_from_txt(
@@ -39,10 +32,11 @@ def _create_tokenzizer_from_txt(
     """
     # Get all the unique tokens from the corpus
     tokens = sampling_function(corpus_file)
+    print(f'Found {len(tokens)} unique tokens.')
     # Create the mapping from tokens to indices
     vocab = {token: idx for idx, token in enumerate(tokens)}
     # Save the vocab file
-    with open(vocab_file, "w") as f:
+    with open(vocab_file, 'w') as f:
         json.dump(vocab, f)
     # Return the response
     return True
@@ -59,18 +53,18 @@ def create_simple_tokenizer(
     Currently only accepts .txt files and all-characters sampling strategy.
     """
     assert (
-        sampling_strategy == "all_characters"
-    ), "Only all_characters sampling strategy is supported."
+        sampling_strategy == 'all_characters'
+    ), 'Only all_characters sampling strategy is supported.'
     corpus_file = Path(corpus_file_str)
     # Assert that the corpus file exists and is a .txt file
     assert corpus_file.exists()
-    assert corpus_file.suffix == ".txt", "Only .txt corpus files are supported."
+    assert corpus_file.suffix == '.txt', 'Only .txt corpus files are supported.'
 
     vocab_file = Path(vocab_file_str)
     # Assert that the vocab file does not exist
     assert not vocab_file.exists()
     # Assert that the vocab file is a .json file
-    assert vocab_file.suffix == ".json", "Only .json vocab files are supported."
+    assert vocab_file.suffix == '.json', 'Only .json vocab files are supported.'
 
     # Create the vocab file
     response = _create_tokenzizer_from_txt(
@@ -81,7 +75,7 @@ def create_simple_tokenizer(
     return response
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     fire.Fire(create_simple_tokenizer)
     # Example usage: python experimental/create_simple_tokenizer.py
     # --corpus_file_str data/corpus/shakespeare.txt

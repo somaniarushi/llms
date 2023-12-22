@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "llms"
+version = "0.1.0"
+description = "Rudimentary implementations of LLMs"
+authors = ["Arushi Somani <arushisomani@berkeley.edu>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.10.2"
+fire = "0.5.0"
+torch = "2.1.2"
+pytest = "^7.4.3"
+pip = "^23.3.2"
+install = "^1.3.5"
+pyyaml = "^6.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -53,5 +53,5 @@ class BigramLanguageModel(nn.Module):
         ), f'idx should be (1, seq_len) but got {idx.shape}'
         logits, _ = self.forward(idx)
         probs = F.softmax(logits, dim=-1)
-        new_tokens = torch.multinomial(probs, max_new_tokens)
+        new_tokens = torch.multinomial(probs, max_new_tokens, replacement=True)
         return new_tokens

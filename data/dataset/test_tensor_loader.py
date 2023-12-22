@@ -12,8 +12,8 @@ SPLIT_ERROR_MARGIN = 1e-4
 class TestTensorDataset:
     def test_train_val(self) -> None:
         dataset = TensorDatasetProvider.get_train_and_val_data(
-            data_file="data/corpus/shakespeare.txt",
-            tokenizer=BaseJSONTokenizer("data/tokenizer/all_chars.json"),
+            data_file='data/corpus/shakespeare.txt',
+            tokenizer=BaseJSONTokenizer('data/tokenizer/all_chars.json'),
             max_seq_len=8,
             batch_size=4,
             split=0.9,
@@ -21,11 +21,11 @@ class TestTensorDataset:
         assert isinstance(
             dataset.train,
             TensorDataset,
-        ), "Expected train dataset to be a TensorDataset"
+        ), 'Expected train dataset to be a TensorDataset'
         assert isinstance(
             dataset.val,
             TensorDataset,
-        ), "Expected val dataset to be a TensorDataset"
+        ), 'Expected val dataset to be a TensorDataset'
 
         assert dataset.train.data.shape == (4, 31370, 8)
         assert dataset.val.data.shape == (4, 3485, 8)
@@ -41,14 +41,14 @@ class TestTensorDataset:
         # First batch, first sequence
         assert torch.allclose(
             dataset.train.data[0][0],
-            torch.tensor([49, 9, 7, 6, 2, 0, 37, 9]),
+            torch.tensor([18, 47, 56, 57, 58, 1, 15, 47]),
         )
-        assert dataset.tokenizer.decode(dataset.train.data[0][0]) == "First Ci"
+        assert dataset.tokenizer.decode(dataset.train.data[0][0]) == 'First Ci'
 
     def test_getitem(self) -> None:
         dataset = TensorDatasetProvider.get_train_and_val_data(
-            data_file="data/corpus/shakespeare.txt",
-            tokenizer=BaseJSONTokenizer("data/tokenizer/all_chars.json"),
+            data_file='data/corpus/shakespeare.txt',
+            tokenizer=BaseJSONTokenizer('data/tokenizer/all_chars.json'),
             max_seq_len=8,
             batch_size=4,
             split=0.9,
@@ -59,11 +59,25 @@ class TestTensorDataset:
         assert batch.target.shape == (4, 8)
         assert torch.allclose(
             batch.input[0],
-            torch.tensor([49, 9, 7, 6, 2, 0, 37, 9]),
+            torch.tensor([18, 47, 56, 57, 58, 1, 15, 47]),
         )
         assert torch.allclose(
             batch.target[0],
-            torch.tensor([9, 7, 6, 2, 0, 37, 9, 66]),
+            torch.tensor([47, 56, 57, 58, 1, 15, 47, 1]),
         )
-        assert dataset.tokenizer.decode(batch.input[0]) == "First Ci"
-        assert dataset.tokenizer.decode(batch.target[0]) == "irst Ci|PADDING|"
+        assert dataset.tokenizer.decode(batch.input[0]) == 'First Ci'
+        assert dataset.tokenizer.decode(batch.target[0]) == 'irst Ci|PADDING|'
+
+    def test_full_batch(self) -> None:
+        dataset = TensorDatasetProvider.get_train_and_val_data(
+            data_file='data/corpus/shakespeare.txt',
+            tokenizer=BaseJSONTokenizer('data/tokenizer/all_chars.json'),
+            max_seq_len=8,
+            batch_size=4,
+            split=0.9,
+        )
+        batch = dataset.train[755]
+        decoded_inputs = [dataset.tokenizer.decode(input) for input in batch.input]
+        decoded_targets = [dataset.tokenizer.decode(target) for target in batch.target]
+        assert decoded_inputs == [' proceed', 'tizens a', 'a husban', 'S:\nI am ']
+        assert decoded_targets == ['proceed ', 'izens a ', ' husban ', ':\nI am  ']

@@ -9,24 +9,53 @@ from data.tokenizer.base import BaseTokenizer
 
 
 class TensorDataset(BaseDataset):
+    def __init__(
+        self,
+        data: torch.Tensor,
+        tokenizer: BaseTokenizer,
+        batch_size: int,
+        max_seq_len: int,
+    ) -> None:
+        self.data = data
+        print(f'TensorDataset: {self.data.shape}')
+        self.tokenizer = tokenizer
+        self.batch_size = batch_size
+        self.max_seq_len = max_seq_len
+
     def __getitem__(self, index: int) -> Batch:
-        # Modulo the index by the number of batches
-        index = index % len(self.data)
+        # TODO: Implement the ability to wrap and do epochs
+
         # Return a batch of data of the shape (batch_size, max_seq_len)
         # The input and target tensors should be offset by one timestep
         # from each other.
 
         # Get the batch of data at the specified index
         batch = self.data[:, index, :]
+        assert batch.shape == (self.batch_size, self.max_seq_len), (
+            f'{batch.shape} != {(self.batch_size, self.max_seq_len)}'
+        )
         # Get the input and target tensors
-        input = batch
-        target = batch[:, 1:]
-        # Since both need to be (batch_size, max_seq_len), we need to
-        # add a padding token to the end of the target tensor
-        padding_token = self.tokenizer.padding_token
-        target = torch.cat(
-            [target, torch.tensor([[padding_token]] * len(target))],
-            dim=1,
+        target = batch
+        assert target.shape == (self.batch_size, self.max_seq_len), (
+            f'{target.shape} != {(self.batch_size, self.max_seq_len)}'
+        )
+        # For every last token in the batch, drop it
+        input_intermediate = batch[:, :-1]
+        assert input_intermediate.shape == (self.batch_size, self.max_seq_len - 1), (
+            f'{input_intermediate.shape} != {(self.batch_size, self.max_seq_len - 1)}'
+        )
+        # Add a padding token to the beginning of every sequence
+        padding_token = torch.tensor(
+            [self.tokenizer.padding_token],
+            dtype=torch.long,
+        )
+        padding_token = padding_token.repeat(self.batch_size, 1)
+        assert padding_token.shape == (self.batch_size, 1), (
+            f'{padding_token.shape} != {(self.batch_size, 1)}'
+        )
+        input = torch.cat([padding_token, input_intermediate], dim=1)
+        assert input.shape == (self.batch_size, self.max_seq_len), (
+            f'{input.shape} != {(self.batch_size, self.max_seq_len)}'
         )
         return Batch(input, target)
 
@@ -62,7 +91,12 @@ class TensorDatasetProvider(BaseDatasetProvider):
         data = data.unsqueeze(0)
         # Reshape data to be (batch_size, full_len // batch_size, max_seq_len)
         data = data.view(batch_size, -1, max_seq_len)
-        return TensorDataset(data, tokenizer=tokenizer)  # c, b, s
+        return TensorDataset(
+            data,
+            tokenizer=tokenizer,
+            batch_size=batch_size,
+            max_seq_len=max_seq_len,
+        )  # c, b, s
 
     @classmethod
     def split_data(cls, data: torch.Tensor, split: float):
