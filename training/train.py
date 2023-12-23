@@ -1,3 +1,4 @@
+import os
 import time
 from typing import NamedTuple
 
@@ -70,8 +71,10 @@ def train(
     iterations: int,
     dataset: BaseDataset,
     validation: BaseDataset,
+    checkpoint_root_dir: str,
     optimizer: torch.optim.Optimizer,
     eval_iterations: int = 100,
+    save_iterations: int = 200,
     loss_log_iterations: int = 10,
     log_iterations: int = 5000,
 ) -> None:
@@ -109,6 +112,10 @@ def train(
             val_loss = get_validation_loss(model, validation)
             wandb.log({'val_loss': val_loss})
 
+        # Save checkpoint if necessary
+        if idx % save_iterations == 0:
+            save_checkpoint(model, f'checkpoints/{idx}.pth')
+
 def launch_training(
     config: TrainingConfig,
 ) -> nn.Module:
@@ -139,6 +146,9 @@ def launch_training(
         name=f"{config.model.__class__.__name__}_{time.strftime('%Y%m%d_%H%M%S')}",
     )
 
+    # If the checkpoint root doesn't exist, create it
+    os.makedirs(config.save_path, exist_ok=True)
+
     # train the model
     train(
         model=model,
@@ -149,5 +159,5 @@ def launch_training(
     )
 
     # Save the model
-    save_checkpoint(model, config.save_path)
+    save_checkpoint(model)
     return model

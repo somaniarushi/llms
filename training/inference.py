@@ -39,6 +39,6 @@ def run_inference(
     model = load_checkpoint(model, model_ckpt)
 
     # generate some text
-    tokens_to_generate = tokens_to_generate or config.max_seq_len
+    tokens_to_generate = tokens_to_generate or (config.max_seq_len - 1)
     generated_text = generate(model, input_str, tokenizer, tokens_to_generate)
     return generated_text

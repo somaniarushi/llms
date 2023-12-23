@@ -14,7 +14,8 @@ SPLIT = 0.9
 N_EMBED,N_HEAD,N_LAYER = 64, 8, 4
 DROPOUT = 0.0
 
-SAVE_PATH = f'training/checkpoints/lm_{time.strftime("%Y%m%d_%H%M%S")}.pt'
+SAVE_PATH = 'training/checkpoints/lm_20231222_192109.pt'
+# SAVE_PATH = f'training/checkpoints/lm_{time.strftime("%Y%m%d_%H%M%S")}.pt'
 
 training_config = TrainingConfig(
     model=LanguageModel(
@@ -35,9 +36,9 @@ training_config = TrainingConfig(
     # Logging
     project='lm',
     group='shakespeare',
-    iterations=5000,
+    iterations=500,
 )
-launch_training(training_config)
+# launch_training(training_config)
 
 # Now let's generate some text!
-print(run_inference(training_config, SAVE_PATH, 'ROMEO: '))
+print(run_inference(training_config, SAVE_PATH, 'ROMEO: ', tokens_to_generate=100))
