@@ -21,7 +21,15 @@ def pretokenize_txt_file(
     tokens = tokenizer.encode(text)
     # Convert the tokens into a tensor dataset
     data = torch.tensor(tokens).long()
-    # Shuffle the data
+    if len(data) % max_seq_len != 0:
+        # Pad the data
+        data = torch.cat([
+            data,
+            torch.zeros(max_seq_len - (len(data) % max_seq_len)).long(),
+        ])
+    # Change the data into a tensor of shape (num_sequences, max_seq_len)
+    data = data.reshape(-1, max_seq_len)
+    # Shuffle the sequences
     data = data[torch.randperm(data.shape[0])]
     # Save the data
     torch.save(data, out_file)

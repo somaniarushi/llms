@@ -23,15 +23,15 @@ class BaseJSONTokenizer(BaseTokenizer):
         chars = list(text)
         assert all(
             len(char) == 1 for char in chars
-        ), "Input text must be a string of single characters."
+        ), 'Input text must be a string of single characters.'
         return [self.stoi(token) for token in chars]
 
     def decode(self, tokens: list[int]) -> str:
-        return "".join([self.itos(token) for token in tokens])
+        return ''.join([self.itos(token) for token in tokens])
 
     def stoi(self, token: str) -> int:
         if token not in self.vocab:
-            raise ValueError(f"Token {token} not in vocab.")
+            raise ValueError(f'Token {token} not in vocab.')
         return self.vocab[token]
 
     @lru_cache(maxsize=1000)
@@ -39,4 +39,4 @@ class BaseJSONTokenizer(BaseTokenizer):
         for token, idx in self.vocab.items():
             if idx == index:
                 return token
-        raise ValueError(f"Index {index} not in vocab.")
+        raise ValueError(f'Index {index} not in vocab.')

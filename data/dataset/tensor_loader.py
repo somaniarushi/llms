@@ -33,34 +33,27 @@ class TensorDataset(torch.utils.data.Dataset):
         self.max_seq_len = max_seq_len
 
     def __getitem__(self, index: int) -> Batch:
-        # Wrap around if we get to the end of the dataset
-        # IX is batch_size indices into the data
-        ix = torch.randint(0, len(self.data) - self.max_seq_len, (self.batch_size,))
-        x = torch.stack([self.data[i:i+self.max_seq_len] for i in ix])
-        y = torch.stack([self.data[i+1:i+self.max_seq_len+1] for i in ix])
-        return Batch(input=x, target=y)
-        # index = index if index < len(self) else index % len(self)
-        # # Get the start and end indices for the batch
-        # start_idx = index * self.batch_size * self.max_seq_len
-        # end_idx = start_idx + self.batch_size * self.max_seq_len
-        # # Get the batch
-        # batch = self.data[start_idx:end_idx]
-        # # For the input, remove the last token and add a padding token to the front
-        # input = torch.cat(
-        #     [
-        #         torch.tensor([self.tokenizer.padding_idx]).repeat(self.batch_size, 1),
-        #         batch[:, :-1],
-        #     ],
-        #     dim=1,
-        # )
-        # target = batch
-        # return Batch(input=input, target=target)
+        # Each self.data[idx] is a sequence of max_seq_len tokens
+        # We want to create a batch of size self.batch_size
+        batch = [self.data[idx] for idx in range(index, index + self.batch_size)]
+        # input is batch but the last token is removed and a padding token is added at the beginning
+        input = torch.stack([seq[:-1] for seq in batch])
+        input = torch.cat(
+            [
+                torch.zeros((self.batch_size, 1)).long(),
+                input,
+            ], dim=1,
+        )
+        # target is just batch
+        target = torch.stack(batch)
+        return Batch(input=input, target=target)
 
     def __len__(self) -> int:
         """
         How many batches of max_seq_len tokens can we generate from this dataset?
         """
-        return self.data.shape[0] // (self.batch_size * self.max_seq_len)
+        return self.data.shape[0] // self.batch_size
+
 class TensorDatasetProvider:
     """
     Defines a dataset that can be used for training a model.
@@ -76,10 +69,11 @@ class TensorDatasetProvider:
         batch_size: int,
         split: int,
     ) -> TrainValidationData:
-        with open(Path(data_file), 'r') as f:
-            data_raw = f.read()
-        data = tokenizer.encode(data_raw)
-        train_size = int(len(data) * split)
+        data: torch.Tensor = torch.load(data_file)
+        assert data.shape[1] == max_seq_len, (
+            f'Expected max_seq_len to be {max_seq_len} but got {data.shape[1]}'
+        )
+        train_size = int(data.shape[0] * split)
         train_data, val_data = data[:train_size], data[train_size:]
         return TrainValidationData(
             train=TensorDataset(
