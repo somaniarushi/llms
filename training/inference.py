@@ -18,8 +18,8 @@ def generate(
     # set the model to eval mode
     model.eval()
     # generate some text
-    input_tokens = tokenizer.encode(input_str)
-    input_tokens = torch.tensor(input_tokens).unsqueeze(0)
+    input_tokens = tokenizer.encode(input_str) # (seq_len,)
+    input_tokens = torch.tensor(input_tokens).unsqueeze(0) # (1, seq_len)
     generated_tokens = model.generate(input_tokens, num_tokens)
     generated_text = tokenizer.decode(generated_tokens[0].tolist())
     return generated_text

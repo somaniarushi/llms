@@ -56,15 +56,14 @@ class LanguageModel(nn.Module):
         logits = self.fc1(self.norm(self.attention_blocks(embeddings)))
         return logits
 
-    def generate(self, idx: torch.Tensor, max_new_tokens: Optional[int] = None) -> torch.Tensor:
-        max_new_tokens = max_new_tokens or self.seq_len
-        assert max_new_tokens <= self.seq_len, f"Can't do more than seq_len tokens due to positional embeddings"
+    def generate(self, idx: torch.Tensor, max_new_tokens: int) -> torch.Tensor:
         # idx is (1, seq_len) tensor of integers
         assert (
             idx.dim() == 2 and idx.shape[0] == 1
         ), f'idx should be (1, seq_len) but got {idx.shape}'
         for _ in range(max_new_tokens):
-            logits = self.forward(idx)
+            idx_cond = idx[:, -self.seq_len:] # Crop to the last block
+            logits = self.forward(idx_cond)
             assert logits.dim() == 3, (
                 f'Expected logits to be (1, seq_len, vocab_size) but got {logits.shape}'
             )

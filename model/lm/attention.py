@@ -1,6 +1,4 @@
 
-from typing import Optional
-
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -38,7 +36,9 @@ class AttentionHead(nn.Module):
         The formula for attention calculation is
         SOFTMAX(MASK((QK^T) / sqrt(d)))
         """
+        # (batch_size, seq_len, head_size) @ (batch_size, head_size, seq_len) -> (batch_size, seq_len, seq_len)
         wei = query @ key.transpose(-2,-1) * embedding_dim ** -0.5
+        # Cap the mask because seq_len can != self.seq_len (max_seq_len)
         masked_wei = wei.masked_fill(self.tril[:seq_len,:seq_len] == 0, float('-inf'))
         return F.softmax(masked_wei, dim=-1) # (batch_size, seq_len, seq_len)
 
@@ -74,8 +74,7 @@ class MultiHeadAttention(nn.Module):
 
     def forward(self, idx: torch.Tensor) -> torch.Tensor:
         out = torch.cat([head(idx) for head in self.heads], dim=-1) # (batch_size, seq_len, embedding_dim)
-        out = self.projection(out)
-        return self.dropout(out)
+        return self.dropout(self.projection(out))
 
 class AttentionBlock(nn.Module):
     """
@@ -95,7 +94,7 @@ class AttentionBlock(nn.Module):
         super().__init__()
         self.attention = MultiHeadAttention(num_heads, head_size, embedding_dim, seq_len, dropout)
         self.norm1 = nn.LayerNorm(embedding_dim)
-        self.ffwd = FeedForward(embedding_dim, embedding_dim, dropout)
+        self.ffwd = FeedForward(embedding_dim, 4 * embedding_dim, dropout) # TODO: Hidden dim hyperparam?
         self.norm2 = nn.LayerNorm(embedding_dim)
 
     def forward(self, idx: torch.Tensor) -> torch.Tensor:
@@ -103,6 +102,7 @@ class AttentionBlock(nn.Module):
         [LayerNorm -> Attention Block -> LayerNorm -> FFWD -> Out]
         plus res-net connections.
         """
-        out = idx + self.attention(self.norm1(idx))
-        out = idx + self.norm2(out + self.ffwd(out))
+        out = idx
+        out = out + self.attention(self.norm1(out))
+        out = out + self.ffwd(self.norm2(out))
         return out
