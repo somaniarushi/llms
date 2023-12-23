@@ -15,4 +15,9 @@ def log_data_to_wandb(
         # Log the input and target text into a table with two columns
         table = wandb.Table(columns=['input', 'target'])
         table.add_data(input_text, target_text)
-        wandb.log({'input_target': table})
+        table_name = 'input_target'
+        # If the table already exists, append to it
+        if table_name in wandb.run.summary:
+            wandb.run.summary[table_name].update(table)
+        else:
+            wandb.run.summary[table_name] = table

@@ -6,7 +6,7 @@ from training.train import TrainingConfig, launch_training
 from training.utils import get_vocab_size
 
 VOCAB_FILE = 'data/tokenizer/all_chars.json'
-DATA_FILE = 'data/corpus/shakespeare.pt'
+DATA_FILE = 'data/corpus/shakespeare_32.pt'
 
 VOCAB_SIZE = get_vocab_size(VOCAB_FILE)
 BATCH_SIZE, SEQ_LEN = 16, 32
@@ -35,7 +35,7 @@ training_config = TrainingConfig(
     # Logging
     project='lm',
     group='shakespeare',
-    iterations=2000,
+    iterations=10000,
 )
 launch_training(training_config)
 

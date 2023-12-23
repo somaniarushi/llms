@@ -1,3 +1,4 @@
+# THIS FILE HAS BEEN DEPRECATED
 from model.bigram import BigramLanguageModel
 from training.train import TrainingConfig, launch_training, run_inference
 
