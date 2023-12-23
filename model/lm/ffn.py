@@ -13,12 +13,14 @@ class FeedForward(nn.Module):
             dropout: float,
     ) -> None:
         super().__init__()
-        self.net = nn.Sequential([
-            nn.Linear(embedding_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, embedding_dim),
-            nn.Dropout(dropout),
-        ])
+        self.net = nn.Sequential(
+            *[
+                nn.Linear(embedding_dim, hidden_dim),
+                nn.ReLU(),
+                nn.Linear(hidden_dim, embedding_dim),
+                nn.Dropout(dropout),
+            ],
+        )
 
     def forward(self, idx: torch.Tensor) -> torch.Tensor:
         return self.net(idx)

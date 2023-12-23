@@ -32,6 +32,10 @@ training_config = TrainingConfig(
     max_seq_len=SEQ_LEN,
     split=SPLIT,
     seed=42,
+    # Logging
+    project='lm',
+    group='shakespeare',
+    iterations=5000,
 )
 launch_training(training_config)
 
