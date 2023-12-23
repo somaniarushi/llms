@@ -6,37 +6,54 @@ from torch.nn import functional as F
 
 
 # TODO: Loss is completely flattening, there must be something wrong?
-class BagOfWordsLanguageModel(torch.nn.Module):
+class BagOfWordsLanguageModel(nn.Module):
     def __init__(
         self,
             vocab_size: int,
+            seq_len: int,
             embedding_dim: int = 128,
     ):
         super().__init__()
-        self.embedding = torch.nn.Embedding(vocab_size, embedding_dim)
+        self.seq_len = seq_len
+        self.vocab_size = vocab_size
+        self.embedding_dim = embedding_dim
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+        self.positional_embedding = nn.Embedding(seq_len, embedding_dim)
         self.fc1 = torch.nn.Linear(embedding_dim, vocab_size)
 
-    def forward(self, idx: torch.Tensor, targets: torch.Tensor = None) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, idx: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Input: (batch_size, seq_len)
         -> Embedding -> (batch_size, seq_len, embedding_dim)
         -> FC -> (batch_size, seq_len, vocab_size)
         """
+        batch_size, seq_len = idx.shape
         embeddings = self.embedding(idx) # (batch_size, seq_len, embedding_dim)
+        pos_embeddings = self.positional_embedding(torch.arange(seq_len)) # (seq_len, embedding_dim)
+        embeddings = embeddings + pos_embeddings # (batch_size, seq_len, embedding_dim)
         logits = self.fc1(embeddings) # (batch_size, seq_len, vocab_size)
-        if targets is None:
-            return logits, None
-        else:
-            batch, seqlen, vocab_size = logits.shape
-            logits = logits.reshape(batch * seqlen, vocab_size)
-            loss = torch.nn.functional.cross_entropy(logits, targets.reshape(batch * seqlen))
-            return self.softmax(logits), loss
+        return logits
 
-    def generate(self, idx: torch.Tensor, max_new_tokens: int) -> torch.Tensor:
-        assert idx.dim() == 2 and idx.shape[0] == 1, f'idx should be (1, seq_len) but got {idx.shape}'
-        input = idx # (1, seq_len)
+    def generate(self, idx: torch.Tensor, max_new_tokens: int = 32) -> torch.Tensor:
+        """
+        Given a batch of sequences of tokens, idx, generate the next max_new_tokens
+        tokens for each sequence in the batch.
+        """
+        assert max_new_tokens <= self.seq_len, (
+            f'Cannot generate more than {self.seq_len} tokens at a time'
+        )
+        # idx is (1, seq_len) tensor of integers
+        assert (
+            idx.dim() == 2 and idx.shape[0] == 1
+        ), f'idx should be (1, seq_len) but got {idx.shape}'
         for _ in range(max_new_tokens):
-            probs = self.forward(input)[0][:, -1, :]
-            next_input = torch.multinomial(probs, num_samples=1)
-            input = torch.cat([input, next_input], dim=1) # (T + 1, seq_len)
-        return input
+            logits = self.forward(idx)
+            assert logits.dim() == 3, (
+                f'Expected logits to be (1, seq_len, vocab_size) but got {logits.shape}'
+            )
+            # Only focus on the last step
+            logits = logits[:, -1, :]
+            probs = F.softmax(logits, dim=-1)
+            idx_next = torch.multinomial(probs, num_samples=1)
+            idx = torch.cat([idx, idx_next], dim=-1)
+        return idx

@@ -21,8 +21,7 @@ class BigramLanguageModel(nn.Module):
     def forward(
         self,
         idx: torch.Tensor,
-        targets: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+    ) -> torch.Tensor:
         """
         Given a batch of sequences of tokens, idx,
         predict the next token in the sequence.
@@ -33,17 +32,9 @@ class BigramLanguageModel(nn.Module):
         assert idx.dim() == 2
         # idx and targets are both (batch, seq_len) tensor of integers
         logits = self.embedding(idx)  # (batch, seq_len, vocab_size)
+        return logits
 
-        if targets is None: # Doing inference
-            return logits, None
-        else:
-            batch, seqlen, vocab_size = logits.shape
-            # Flatten the batch and sequence dimensions
-            logits = logits.view(batch * seqlen, vocab_size) # (all_embdings, vocab_size)
-            loss = F.cross_entropy(logits, targets.reshape(batch * seqlen))  # Flatten the targets
-            return logits, loss
-
-    def generate(self, idx: torch.Tensor, max_new_tokens: int) -> torch.Tensor:
+    def generate(self, idx: torch.Tensor, max_new_tokens: int = 10) -> torch.Tensor:
         """
         Given a batch of sequences of tokens, idx, generate the next max_new_tokens
         tokens for each sequence in the batch.
@@ -53,7 +44,7 @@ class BigramLanguageModel(nn.Module):
             idx.dim() == 2 and idx.shape[0] == 1
         ), f'idx should be (1, seq_len) but got {idx.shape}'
         for _ in range(max_new_tokens):
-            logits, _ = self.forward(idx)
+            logits = self.forward(idx)
             assert logits.dim() == 3, (
                 f'Expected logits to be (1, seq_len, vocab_size) but got {logits.shape}'
             )

@@ -3,6 +3,7 @@ from typing import NamedTuple
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import yaml
 
 import wandb
@@ -49,6 +50,20 @@ class TrainingConfig(NamedTuple):
     group: str
     seed: int = 42
 
+
+def cross_entropy_between_logits_and_targets(
+    logits: torch.Tensor,
+    targets: torch.Tensor,
+) -> torch.Tensor:
+    # The shape of logits is (batch_size, seq_len, vocab_size)
+    # The shape of targets is (batch_size, seq_len)
+    batch_size, seq_len, vocab_size = logits.shape
+    # Flatten logits and targets
+    logits_flat = logits.reshape(batch_size * seq_len, vocab_size)
+    targets_flat = targets.reshape(batch_size * seq_len)
+    # Compute the cross entropy loss
+    return F.cross_entropy(logits_flat, targets_flat)
+
 def get_validation_loss(
     model: nn.Module,
     validation: BaseDataset,
@@ -63,7 +78,8 @@ def get_validation_loss(
         batch = validation[i]
         input_tokens = batch.input
         target_tokens = batch.target
-        _, loss = model(input_tokens, target_tokens)
+        logits = model(input_tokens)
+        loss = cross_entropy_between_logits_and_targets(logits, target_tokens)
         total_loss += loss.item()
 
     model.train()
@@ -110,7 +126,8 @@ def train(
         optimizer.zero_grad()
 
         # forward pass
-        _, loss = model(input_tokens, target_tokens)
+        logits = model(input_tokens)
+        loss = cross_entropy_between_logits_and_targets(logits, target_tokens)
 
         # backward pass
         loss.backward()
@@ -159,8 +176,7 @@ def launch_training(
         split=config.split,
     )
     # create the model
-    model_cls = config.model_type
-    model = model_cls(vocab_size=len(tokenizer))
+    model = config.model_type
 
     # create the optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
@@ -169,7 +185,7 @@ def launch_training(
     wandb.init(
         project=config.project,
         group=config.group,
-        name=f"{config.model_type.__name__}_{time.strftime('%Y%m%d_%H%M%S')}",
+        name=f"{config.model_type.__class__.__name__}_{time.strftime('%Y%m%d_%H%M%S')}",
     )
 
     # train the model
@@ -196,7 +212,7 @@ def run_inference(
     tokenizer = BaseJSONTokenizer(vocab_file='data/tokenizer/all_chars.json')
 
     # load the model
-    model = config.model_type(vocab_size=len(tokenizer))
+    model = config.model_type
     model = load_checkpoint(model, model_ckpt)
 
     # generate some text

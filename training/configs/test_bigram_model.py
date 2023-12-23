@@ -3,7 +3,9 @@ from training.train import TrainingConfig, launch_training, run_inference
 
 config = TrainingConfig(
     # Model details
-    model_type=BigramLanguageModel,
+    model_type=BigramLanguageModel(
+        vocab_size=64,
+    ),
     iterations=10000,
     seed=42,
     save_path='training/checkpoints/bigram.pt',
@@ -25,6 +27,6 @@ print(
         config=config,
         model_ckpt='training/checkpoints/bigram.pt',
         input_str=' ',
-        tokens_to_generate=400,
+        tokens_to_generate=32,
     ),
 )
