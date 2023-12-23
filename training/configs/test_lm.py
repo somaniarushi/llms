@@ -35,7 +35,7 @@ training_config = TrainingConfig(
     # Logging
     project='lm',
     group='shakespeare',
-    iterations=2000,
+    iterations=10000,
 )
 launch_training(training_config)
 
