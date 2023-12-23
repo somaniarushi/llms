@@ -10,7 +10,7 @@ vocab_size = len(vocab)
 save_path = f'training/checkpoints/bow_{time.strftime("%Y%m%d_%H%M%S")}.pt'
 config = TrainingConfig(
     # Model details
-    model_type=BagOfWordsLanguageModel(
+    model=BagOfWordsLanguageModel(
         vocab_size=vocab_size,
         seq_len=512,
     ),

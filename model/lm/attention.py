@@ -6,7 +6,6 @@ import torch.nn as nn
 from torch.nn import functional as F
 
 from model.lm.ffn import FeedForward
-from model.lm.norms import LayerNorm1D
 
 
 class AttentionHead(nn.Module):
@@ -95,7 +94,7 @@ class AttentionBlock(nn.Module):
     ) -> None:
         super().__init__()
         self.attention = MultiHeadAttention(num_heads, head_size, embedding_dim, seq_len, dropout)
-        self.norm1 = LayerNorm1D(embedding_dim)
+        self.norm1 = nn.LayerNorm(embedding_dim)
         self.ffwd = FeedForward(embedding_dim, embedding_dim, dropout)
         self.norm2 = nn.LayerNorm(embedding_dim)
 

@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -35,14 +35,13 @@ class BagOfWordsLanguageModel(nn.Module):
         logits = self.fc1(embeddings) # (batch_size, seq_len, vocab_size)
         return logits
 
-    def generate(self, idx: torch.Tensor, max_new_tokens: int = 32) -> torch.Tensor:
+    def generate(self, idx: torch.Tensor, max_new_tokens: Optional[int] = None) -> torch.Tensor:
         """
         Given a batch of sequences of tokens, idx, generate the next max_new_tokens
         tokens for each sequence in the batch.
         """
-        assert max_new_tokens <= self.seq_len, (
-            f'Cannot generate more than {self.seq_len} tokens at a time'
-        )
+        max_new_tokens = max_new_tokens or self.seq_len
+        assert max_new_tokens <= self.seq_len, f"Can't do more than seq_len tokens due to positional embeddings"
         # idx is (1, seq_len) tensor of integers
         assert (
             idx.dim() == 2 and idx.shape[0] == 1

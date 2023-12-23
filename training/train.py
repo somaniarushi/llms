@@ -26,7 +26,7 @@ class TrainingConfig(NamedTuple):
         iterations (int): How many iterations to train for; can be multiple epochs or less than one epoch.
         vocab_file (str): Where the vocab is stored.
         save_path (str): Where to save the model.
-        model_type (nn.Module): Root class of the model to use.
+        model (nn.Module): Root class of the model to use.
         seed (int): Random seed for reproducibility.
     Data Args:
         max_seq_len (int): How many tokens to use per sequence.
@@ -45,7 +45,7 @@ class TrainingConfig(NamedTuple):
     data_file: str
     vocab_file: str
     save_path: str
-    model_type: nn.Module
+    model: nn.Module
     project: str
     group: str
     seed: int = 42
@@ -176,7 +176,7 @@ def launch_training(
         split=config.split,
     )
     # create the model
-    model = config.model_type
+    model = config.model
 
     # create the optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
@@ -185,7 +185,7 @@ def launch_training(
     wandb.init(
         project=config.project,
         group=config.group,
-        name=f"{config.model_type.__class__.__name__}_{time.strftime('%Y%m%d_%H%M%S')}",
+        name=f"{config.model.__class__.__name__}_{time.strftime('%Y%m%d_%H%M%S')}",
     )
 
     # train the model
@@ -212,7 +212,7 @@ def run_inference(
     tokenizer = BaseJSONTokenizer(vocab_file='data/tokenizer/all_chars.json')
 
     # load the model
-    model = config.model_type
+    model = config.model
     model = load_checkpoint(model, model_ckpt)
 
     # generate some text

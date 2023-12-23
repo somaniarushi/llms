@@ -3,7 +3,7 @@ from training.train import TrainingConfig, launch_training, run_inference
 
 config = TrainingConfig(
     # Model details
-    model_type=BigramLanguageModel(
+    model=BigramLanguageModel(
         vocab_size=64,
     ),
     iterations=10000,
