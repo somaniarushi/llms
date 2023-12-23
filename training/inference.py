@@ -1,3 +1,5 @@
+from typing import Optional
+
 import torch
 import torch.nn as nn
 
@@ -26,7 +28,7 @@ def run_inference(
     config: TrainingConfig,
     model_ckpt: str,
     input_str: str,
-    tokens_to_generate: int = 10,
+    tokens_to_generate: Optional[int] = None,
 ) -> str:
     torch.manual_seed(config.seed)
     # load the tokenizer
@@ -37,5 +39,6 @@ def run_inference(
     model = load_checkpoint(model, model_ckpt)
 
     # generate some text
+    tokens_to_generate = tokens_to_generate or config.max_seq_len
     generated_text = generate(model, input_str, tokenizer, tokens_to_generate)
     return generated_text

@@ -5,7 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from model.lm.attention import AttentionBlock
-from model.lm.norms import LayerNorm1D
 from model.lm.posemb import PositionalEmbedding
 
 
@@ -31,6 +30,8 @@ class LanguageModel(nn.Module):
                     embedding_dim=embedding_dim,
                     num_heads=num_heads,
                     dropout=dropout,
+                    seq_len=seq_len,
+                    head_size=embedding_dim // num_heads,
                 ) for _ in range(num_layers)
             ],
         )

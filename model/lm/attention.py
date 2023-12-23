@@ -99,6 +99,10 @@ class AttentionBlock(nn.Module):
         self.norm2 = nn.LayerNorm(embedding_dim)
 
     def forward(self, idx: torch.Tensor) -> torch.Tensor:
-        out = self.attention(self.norm1(idx))
-        out = self.norm2(out + self.ffwd(out))
+        """
+        [LayerNorm -> Attention Block -> LayerNorm -> FFWD -> Out]
+        plus res-net connections.
+        """
+        out = idx + self.attention(self.norm1(idx))
+        out = idx + self.norm2(out + self.ffwd(out))
         return out
