@@ -1,5 +1,6 @@
 import os
 import time
+from pathlib import Path
 from typing import NamedTuple
 
 import torch
@@ -74,7 +75,7 @@ def train(
     checkpoint_root_dir: str,
     optimizer: torch.optim.Optimizer,
     eval_iterations: int = 100,
-    save_iterations: int = 200,
+    save_iterations: int = 50,
     loss_log_iterations: int = 10,
     log_iterations: int = 5000,
 ) -> None:
@@ -105,16 +106,16 @@ def train(
 
         # Log the training loss
         if idx % loss_log_iterations == 0:
-            wandb.log({'loss': loss.item()})
+            wandb.log({'loss': loss.item()}, step=idx)
 
         # print the loss every 100 iterations
         if idx % eval_iterations == 0:
             val_loss = get_validation_loss(model, validation)
-            wandb.log({'val_loss': val_loss})
+            wandb.log({'val_loss': val_loss}, step=idx)
 
         # Save checkpoint if necessary
         if idx % save_iterations == 0:
-            save_checkpoint(model, f'checkpoints/{idx}.pth')
+            save_checkpoint(model, Path(checkpoint_root_dir) / f'iter_{idx}.pt')
 
 def launch_training(
     config: TrainingConfig,
@@ -153,11 +154,12 @@ def launch_training(
     train(
         model=model,
         iterations=config.iterations,
+        checkpoint_root_dir=config.save_path,
         dataset=dataset.train,
         validation=dataset.val,
         optimizer=optimizer,
     )
 
     # Save the model
-    save_checkpoint(model)
+    save_checkpoint(model, Path(config.save_path + '/final.pt'))
     return model
