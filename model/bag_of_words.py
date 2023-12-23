@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
+from model.lm.posemb import PositionalEmbedding
+
 
 # TODO: Loss is completely flattening, there must be something wrong?
 class BagOfWordsLanguageModel(nn.Module):
@@ -18,7 +20,7 @@ class BagOfWordsLanguageModel(nn.Module):
         self.vocab_size = vocab_size
         self.embedding_dim = embedding_dim
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
-        self.positional_embedding = nn.Embedding(seq_len, embedding_dim)
+        self.positional_embedding = PositionalEmbedding(embedding_dim=embedding_dim, seq_len=seq_len)
         self.fc1 = torch.nn.Linear(embedding_dim, vocab_size)
 
     def forward(self, idx: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -27,9 +29,8 @@ class BagOfWordsLanguageModel(nn.Module):
         -> Embedding -> (batch_size, seq_len, embedding_dim)
         -> FC -> (batch_size, seq_len, vocab_size)
         """
-        batch_size, seq_len = idx.shape
         embeddings = self.embedding(idx) # (batch_size, seq_len, embedding_dim)
-        pos_embeddings = self.positional_embedding(torch.arange(seq_len)) # (seq_len, embedding_dim)
+        pos_embeddings = self.positional_embedding(idx) # (seq_len, embedding_dim)
         embeddings = embeddings + pos_embeddings # (batch_size, seq_len, embedding_dim)
         logits = self.fc1(embeddings) # (batch_size, seq_len, vocab_size)
         return logits

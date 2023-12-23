@@ -5,6 +5,9 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
+from model.lm.ffn import FeedForward
+from model.lm.norms import LayerNorm1D
+
 
 class AttentionHead(nn.Module):
     """
@@ -74,3 +77,29 @@ class MultiHeadAttention(nn.Module):
         out = torch.cat([head(idx) for head in self.heads], dim=-1) # (batch_size, seq_len, embedding_dim)
         out = self.projection(out)
         return self.dropout(out)
+
+class AttentionBlock(nn.Module):
+    """
+    A single attention block, which consists of
+    one multi-head attention layer and one feed-forward layer,
+    with a couple layer norms in the middle.
+    [LayerNorm -> Attention Block -> LayerNorm -> FFWD -> Out]
+    """
+    def __init__(
+            self,
+            num_heads: int,
+            head_size: int,
+            embedding_dim: int,
+            seq_len: int,
+            dropout: float,
+    ) -> None:
+        super().__init__()
+        self.attention = MultiHeadAttention(num_heads, head_size, embedding_dim, seq_len, dropout)
+        self.norm1 = LayerNorm1D(embedding_dim)
+        self.ffwd = FeedForward(embedding_dim, embedding_dim, dropout)
+        self.norm2 = nn.LayerNorm(embedding_dim)
+
+    def forward(self, idx: torch.Tensor) -> torch.Tensor:
+        out = self.attention(self.norm1(idx))
+        out = self.norm2(out + self.ffwd(out))
+        return out
