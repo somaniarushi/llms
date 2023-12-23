@@ -137,6 +137,10 @@ def launch_training(
     # create the model
     model = config.model
 
+    # Print the total number of parameters
+    total_params = sum(p.numel() for p in model.parameters())
+    print(f'Total parameters: {total_params}')
+
     # create the optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
