@@ -4,20 +4,14 @@ from typing import NamedTuple
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import yaml
 
 import wandb
 from data.dataset.base import BaseDataset
 from data.dataset.tensor_loader import TensorDatasetProvider
-from data.tokenizer.base import BaseTokenizer
 from data.tokenizer.json_tokenizer import BaseJSONTokenizer
-from training.checkpointing import load_checkpoint, save_checkpoint
-
-
-def load_yaml(config_file: str) -> dict:
-    with open(config_file) as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-    return config
+from training.checkpointing import save_checkpoint
+from training.logging_utils import log_data_to_wandb
+from training.loss import cross_entropy_between_logits_and_targets
 
 
 class TrainingConfig(NamedTuple):
@@ -50,20 +44,6 @@ class TrainingConfig(NamedTuple):
     group: str
     seed: int = 42
 
-
-def cross_entropy_between_logits_and_targets(
-    logits: torch.Tensor,
-    targets: torch.Tensor,
-) -> torch.Tensor:
-    # The shape of logits is (batch_size, seq_len, vocab_size)
-    # The shape of targets is (batch_size, seq_len)
-    batch_size, seq_len, vocab_size = logits.shape
-    # Flatten logits and targets
-    logits_flat = logits.reshape(batch_size * seq_len, vocab_size)
-    targets_flat = targets.reshape(batch_size * seq_len)
-    # Compute the cross entropy loss
-    return F.cross_entropy(logits_flat, targets_flat)
-
 def get_validation_loss(
     model: nn.Module,
     validation: BaseDataset,
@@ -84,19 +64,6 @@ def get_validation_loss(
 
     model.train()
     return total_loss / len(validation)
-
-def log_data_to_wandb(
-    input_tokens: torch.Tensor,
-    target_tokens: torch.Tensor,
-    tokenizer: BaseTokenizer,
-) -> None:
-        # Detokenize the first input and target tokens
-        input_text = '|END OF TASK|'.join([tokenizer.decode(tokens) for tokens in input_tokens])
-        target_text = '|END OF TASK|'.join([tokenizer.decode(tokens) for tokens in target_tokens])
-        # Log the input and target text into a table with two columns
-        table = wandb.Table(columns=['input', 'target'])
-        table.add_data(input_text, target_text)
-        wandb.log({'input_target': table})
 
 def train(
     model: nn.Module,
@@ -142,22 +109,6 @@ def train(
             val_loss = get_validation_loss(model, validation)
             wandb.log({'val_loss': val_loss})
 
-def generate(
-    model: nn.Module,
-    input_str: str,
-    tokenizer: BaseTokenizer,
-    num_tokens: int = 10,
-):
-    # set the model to eval mode
-    model.eval()
-    # generate some text
-    input_tokens = tokenizer.encode(input_str)
-    input_tokens = torch.tensor(input_tokens).unsqueeze(0)
-    generated_tokens = model.generate(input_tokens, num_tokens)
-    generated_text = tokenizer.decode(generated_tokens[0].tolist())
-    return generated_text
-
-
 def launch_training(
     config: TrainingConfig,
 ) -> nn.Module:
@@ -200,21 +151,3 @@ def launch_training(
     # Save the model
     save_checkpoint(model, config.save_path)
     return model
-
-def run_inference(
-    config: TrainingConfig,
-    model_ckpt: str,
-    input_str: str,
-    tokens_to_generate: int = 10,
-) -> str:
-    torch.manual_seed(config.seed)
-    # load the tokenizer
-    tokenizer = BaseJSONTokenizer(vocab_file='data/tokenizer/all_chars.json')
-
-    # load the model
-    model = config.model
-    model = load_checkpoint(model, model_ckpt)
-
-    # generate some text
-    generated_text = generate(model, input_str, tokenizer, tokens_to_generate)
-    return generated_text
