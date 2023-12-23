@@ -1,14 +1,25 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import NamedTuple, Tuple
 
 import torch
 
-from data.dataset.base import BaseDataset, BaseDatasetProvider, Batch
 from data.tokenizer.base import BaseTokenizer
 
 
-class TensorDataset(BaseDataset):
+class Batch(NamedTuple):
+    input: torch.Tensor
+    target: torch.Tensor
+class TrainValidationData(NamedTuple):
+    train: TensorDataset
+    val: TensorDataset
+    split: float
+    max_seq_len: int
+    tokenizer: BaseTokenizer
+
+
+class TensorDataset(torch.utils.data.Dataset):
     def __init__(
         self,
         data: torch.Tensor,
@@ -16,100 +27,74 @@ class TensorDataset(BaseDataset):
         batch_size: int,
         max_seq_len: int,
     ) -> None:
-        self.data = data
-        print(f'TensorDataset: {self.data.shape}')
+        self.data = data # A tensor of shape (some_size, )
         self.tokenizer = tokenizer
         self.batch_size = batch_size
         self.max_seq_len = max_seq_len
 
     def __getitem__(self, index: int) -> Batch:
-        # TODO: Implement the ability to wrap and do epochs
-        if index >= len(self.data):
-            index = index % len(self.data)
-        # Return a batch of data of the shape (batch_size, max_seq_len)
-        # The input and target tensors should be offset by one timestep
-        # from each other.
+        # Wrap around if we get to the end of the dataset
+        # IX is batch_size indices into the data
+        ix = torch.randint(0, len(self.data) - self.max_seq_len, (self.batch_size,))
+        x = torch.stack([self.data[i:i+self.max_seq_len] for i in ix])
+        y = torch.stack([self.data[i+1:i+self.max_seq_len+1] for i in ix])
+        return Batch(input=x, target=y)
+        # index = index if index < len(self) else index % len(self)
+        # # Get the start and end indices for the batch
+        # start_idx = index * self.batch_size * self.max_seq_len
+        # end_idx = start_idx + self.batch_size * self.max_seq_len
+        # # Get the batch
+        # batch = self.data[start_idx:end_idx]
+        # # For the input, remove the last token and add a padding token to the front
+        # input = torch.cat(
+        #     [
+        #         torch.tensor([self.tokenizer.padding_idx]).repeat(self.batch_size, 1),
+        #         batch[:, :-1],
+        #     ],
+        #     dim=1,
+        # )
+        # target = batch
+        # return Batch(input=input, target=target)
 
-        # Get the batch of data at the specified index
-        batch = self.data[:, index, :]
-        assert batch.shape == (self.batch_size, self.max_seq_len), (
-            f'{batch.shape} != {(self.batch_size, self.max_seq_len)}'
-        )
-        # Get the input and target tensors
-        target = batch
-        assert target.shape == (self.batch_size, self.max_seq_len), (
-            f'{target.shape} != {(self.batch_size, self.max_seq_len)}'
-        )
-        # For every last token in the batch, drop it
-        input_intermediate = batch[:, :-1]
-        assert input_intermediate.shape == (self.batch_size, self.max_seq_len - 1), (
-            f'{input_intermediate.shape} != {(self.batch_size, self.max_seq_len - 1)}'
-        )
-        # Add a padding token to the beginning of every sequence
-        padding_token = torch.tensor(
-            [self.tokenizer.padding_token],
-            dtype=torch.long,
-        )
-        padding_token = padding_token.repeat(self.batch_size, 1)
-        assert padding_token.shape == (self.batch_size, 1), (
-            f'{padding_token.shape} != {(self.batch_size, 1)}'
-        )
-        input = torch.cat([padding_token, input_intermediate], dim=1)
-        assert input.shape == (self.batch_size, self.max_seq_len), (
-            f'{input.shape} != {(self.batch_size, self.max_seq_len)}'
-        )
-        return Batch(input, target)
-
-
-class TensorDatasetProvider(BaseDatasetProvider):
+    def __len__(self) -> int:
+        """
+        How many batches of max_seq_len tokens can we generate from this dataset?
+        """
+        return self.data.shape[0] // (self.batch_size * self.max_seq_len)
+class TensorDatasetProvider:
     """
     Defines a dataset that can be used for training a model.
     Returns two datasets, one for training and one for validation—each of
     which can be used to get batches of data of shape (batch_size, max_seq_len).
     The input and target tensors will be offset by one timestep.
     """
-
-    def __init__(self) -> None:
-        pass
-
-    @classmethod
-    def reformat_data(
-        cls,
-        data: torch.Tensor,
-        batch_size: int,
-        max_seq_len: int,
+    @staticmethod
+    def get_train_and_val_data(
+        data_file: str,
         tokenizer: BaseTokenizer,
-    ) -> TensorDataset:
-        """
-        Given a tensor of shape (full_len,), return a tensor of shape
-        (full_len // batch_size, batch_size, max_seq_len)
-        """
-        # Truncate data so that it is evenly divisible by batch_size * max_seq_len
-        if len(data) % (batch_size * max_seq_len) != 0:
-            data = data[: -(len(data) % (batch_size * max_seq_len))]
-            print(f'WARN: Truncated data to length {len(data)}')
-        # Add a batch dimension
-        data = data.unsqueeze(0)
-        # Reshape data to be (batch_size, full_len // batch_size, max_seq_len)
-        data = data.view(batch_size, -1, max_seq_len)
-        return TensorDataset(
-            data,
-            tokenizer=tokenizer,
-            batch_size=batch_size,
+        max_seq_len: int,
+        batch_size: int,
+        split: int,
+    ) -> TrainValidationData:
+        with open(Path(data_file), 'r') as f:
+            data_raw = f.read()
+        data = tokenizer.encode(data_raw)
+        train_size = int(len(data) * split)
+        train_data, val_data = data[:train_size], data[train_size:]
+        return TrainValidationData(
+            train=TensorDataset(
+                data=torch.Tensor(train_data).long(),
+                tokenizer=tokenizer,
+                batch_size=batch_size,
+                max_seq_len=max_seq_len,
+            ),
+            val=TensorDataset(
+                data=torch.Tensor(val_data).long(),
+                tokenizer=tokenizer,
+                batch_size=batch_size,
+                max_seq_len=max_seq_len,
+            ),
+            split=split,
             max_seq_len=max_seq_len,
-        )  # c, b, s
-
-    @classmethod
-    def split_data(cls, data: torch.Tensor, split: float):
-        split_idx = int(len(data) * split)
-        return data[:split_idx], data[split_idx:]
-
-    @classmethod
-    def load_data(cls, data_file: Path, tokenizer: BaseTokenizer) -> torch.Tensor:
-        with open(data_file) as f:
-            raw_data = f.read()
-        data = torch.tensor(
-            tokenizer.encode(raw_data),
-            dtype=torch.long,
-        )  # (1115394,)
-        return data
+            tokenizer=tokenizer,
+        )

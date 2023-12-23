@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import torch
 
-from data.dataset.base import Batch
-from data.dataset.tensor_loader import TensorDataset, TensorDatasetProvider
+from data.dataset.tensor_loader import (Batch, TensorDataset,
+                                        TensorDatasetProvider)
 from data.tokenizer.json_tokenizer import BaseJSONTokenizer
 
 SPLIT_ERROR_MARGIN = 1e-4

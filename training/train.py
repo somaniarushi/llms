@@ -7,8 +7,7 @@ import torch
 import torch.nn as nn
 
 import wandb
-from data.dataset.base import BaseDataset
-from data.dataset.tensor_loader import TensorDatasetProvider
+from data.dataset.tensor_loader import TensorDataset, TensorDatasetProvider
 from data.tokenizer.json_tokenizer import BaseJSONTokenizer
 from training.checkpointing import save_checkpoint
 from training.logging_utils import log_data_to_wandb
@@ -47,7 +46,7 @@ class TrainingConfig(NamedTuple):
 
 def get_validation_loss(
     model: nn.Module,
-    validation: BaseDataset,
+    validation: TensorDataset,
 ) -> None:
     """
     Compute the validation loss and print it out.
@@ -69,8 +68,8 @@ def get_validation_loss(
 def train(
     model: nn.Module,
     iterations: int,
-    dataset: BaseDataset,
-    validation: BaseDataset,
+    dataset: TensorDataset,
+    validation: TensorDataset,
     checkpoint_root_dir: str,
     optimizer: torch.optim.Optimizer,
     eval_iterations: int = 100,

@@ -35,12 +35,13 @@ training_config = TrainingConfig(
     # Logging
     project='lm',
     group='shakespeare',
-    iterations=10000,
+    iterations=2000,
 )
 launch_training(training_config)
 
 # Now let's generate some text!
-INFERENCE_PATH=f'{SAVE_PATH}/final.pt'
+INFERENCE_PATH = f'{SAVE_PATH}/final.pt'
+# INFERENCE_PATH=f'training/checkpoints/lm_20231222_234858/iter_5000.pt'
 last_token = ' '
 print(
     run_inference(
