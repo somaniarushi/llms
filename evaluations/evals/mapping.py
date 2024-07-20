@@ -1,9 +1,18 @@
 from evals.drop import DropEval
 from evals.gpqa import GPQAEval
 from evals.mmlu import MMLUEval
+from evals.aritheval import AdditionEval, SubtractionEval, MultiplicationEval, DivisionEval
 from typings import EvalResult
 
-EVAL_TASK_MAPPING = {"mmlu": MMLUEval, "drop": DropEval, "gpqa": GPQAEval}
+EVAL_TASK_MAPPING = {
+    "mmlu": MMLUEval,
+    "drop": DropEval,
+    "gpqa": GPQAEval,
+    "addition": AdditionEval,
+    "subtraction": SubtractionEval,
+    "multiplication": MultiplicationEval,
+    "division": DivisionEval,
+}
 
 
 def run_eval_from_name(
