@@ -2,9 +2,8 @@ import base64
 import time
 from typing import Any, Dict, List, Optional
 
-from openai import OpenAI
-
 from models.base import SamplerBase
+from openai import OpenAI
 from typings import MessageList
 
 MAX_ALLOWED_TRIALS = 5

@@ -1,6 +1,7 @@
+from typing import Tuple
+
 import torch
 import torch.nn as nn
-from typing import Tuple
 from torch.nn import functional as F
 
 from src.model.moe import Router

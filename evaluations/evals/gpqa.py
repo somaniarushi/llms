@@ -8,7 +8,6 @@ import random
 import re
 
 import pandas
-
 from common import (
     ANSWER_PATTERN_MULTICHOICE,
     aggregate_results,

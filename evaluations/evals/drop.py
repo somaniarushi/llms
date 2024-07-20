@@ -13,11 +13,10 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 # from blobfile import BlobFile as bf
 import numpy as np
-from scipy.optimize import linear_sum_assignment
-
 from common import ANSWER_PATTERN, aggregate_results, map_with_progress
 from evals.base import EvalBase
 from models.base import SamplerBase
+from scipy.optimize import linear_sum_assignment
 from typings import EvalResult, SingleEvalResult
 
 """

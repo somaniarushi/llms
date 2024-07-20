@@ -1,7 +1,8 @@
+from abc import ABC, abstractmethod
+from typing import Tuple
+
 import torch
 import torch.nn as nn
-from typing import Tuple
-from abc import ABC, abstractmethod
 
 
 class Router(nn.Module, ABC):

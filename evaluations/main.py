@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import pandas as pd
-
 from evals.mapping import EVAL_TASK_MAPPING, run_eval_from_name
 from models.mapping import MODEL_LOADING_MAP, get_model_server
 from typings import EvalResult

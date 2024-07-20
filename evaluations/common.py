@@ -4,9 +4,8 @@ from multiprocessing.pool import ThreadPool
 from typing import Any
 
 import numpy as np
-from tqdm import tqdm
-
 from models.base import SamplerBase
+from tqdm import tqdm
 from typings import EvalResult, Message, SingleEvalResult
 
 QUERY_TEMPLATE_MULTICHOICE = """

@@ -9,7 +9,6 @@ import re
 from typing import Any, Dict, List, Optional
 
 import pandas
-
 from common import (
     ANSWER_PATTERN_MULTICHOICE,
     aggregate_results,

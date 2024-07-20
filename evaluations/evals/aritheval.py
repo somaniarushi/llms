@@ -6,10 +6,10 @@ https://arxiv.org/abs/2009.03300
 
 import random
 import re
-from typing import Any, Dict, List, Optional
 from enum import Enum
-import pandas
+from typing import Any, Dict, List, Optional
 
+import pandas
 from common import (
     ANSWER_PATTERN_MULTICHOICE,
     aggregate_results,
@@ -19,6 +19,7 @@ from common import (
 from evals.base import EvalBase
 from models.base import SamplerBase
 from typings import EvalResult, SingleEvalResult
+
 
 class EvaluationType(Enum):
     ADDITION = "addition"
@@ -38,14 +39,16 @@ class EvaluationType(Enum):
         else:
             raise ValueError(f"Invalid EvaluationType: {s}")
 
+
 DATA_FILE_PATH = "./aritheval/numbers.csv"
+
 
 class ArithEvalBase(EvalBase):
     def __init__(
-            self,
-            eval_type: EvaluationType,
-            num_examples: Optional[int] = None,
-        ) -> None:
+        self,
+        eval_type: EvaluationType,
+        num_examples: Optional[int] = None,
+    ) -> None:
         # Read in the CSV
         df = pandas.read_csv(DATA_FILE_PATH)
         self.examples = df.to_dict(orient="records")
@@ -93,9 +96,7 @@ class ArithEvalBase(EvalBase):
         def get_single_eval_result(row: Dict[str, Any]) -> SingleEvalResult:
 
             prompt = self.get_prompt(row["number1"], row["number2"], self.eval_type)
-            prompt_messages = sampler._pack_message(
-                content=prompt, role="user"
-            )
+            prompt_messages = sampler._pack_message(content=prompt, role="user")
             response_text = sampler(prompt_messages)
 
             if len(response_text.strip()) == 0:
@@ -110,17 +111,25 @@ class ArithEvalBase(EvalBase):
         results = map_with_progress(get_single_eval_result, self.examples)
         return aggregate_results(results)
 
+
 class AdditionEval(ArithEvalBase):
     def __init__(self, num_examples: Optional[int] = None) -> None:
         super().__init__(eval_type=EvaluationType.ADDITION, num_examples=num_examples)
 
+
 class SubtractionEval(ArithEvalBase):
     def __init__(self, num_examples: Optional[int] = None) -> None:
-        super().__init__(eval_type=EvaluationType.SUBTRACTION, num_examples=num_examples)
+        super().__init__(
+            eval_type=EvaluationType.SUBTRACTION, num_examples=num_examples
+        )
+
 
 class MultiplicationEval(ArithEvalBase):
     def __init__(self, num_examples: Optional[int] = None) -> None:
-        super().__init__(eval_type=EvaluationType.MULTIPLICATION, num_examples=num_examples)
+        super().__init__(
+            eval_type=EvaluationType.MULTIPLICATION, num_examples=num_examples
+        )
+
 
 class DivisionEval(ArithEvalBase):
     def __init__(self, num_examples: Optional[int] = None) -> None:

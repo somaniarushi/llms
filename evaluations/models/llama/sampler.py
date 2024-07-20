@@ -3,7 +3,6 @@ import time
 from typing import Any, Optional
 
 import requests
-
 from models.base import SamplerBase
 from typings import MessageList
 

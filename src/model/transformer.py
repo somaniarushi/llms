@@ -1,9 +1,10 @@
+from typing import Optional, Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Tuple
 
-from src.model.moe import SparseMoE, Router
+from src.model.moe import Router, SparseMoE
 
 
 class Head(nn.Module):

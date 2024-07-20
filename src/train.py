@@ -1,14 +1,15 @@
+from typing import Callable, List, NamedTuple, TypedDict
+
 import torch
-import wandb
 import torch.nn as nn
+import wandb
 from torch.nn import init
-from typing import Callable, List, TypedDict, NamedTuple
 
 from src.data.loader import Loader
 from src.data.tokenizer import Tokenizer
-from src.model.transformer import SparseMoELanguageModel
 from src.model.moe import Router
 from src.model.routers import NoisyTopKRouter
+from src.model.transformer import SparseMoELanguageModel
 
 torch.manual_seed(42)
 
