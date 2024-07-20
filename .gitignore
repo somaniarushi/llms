@@ -141,10 +141,3 @@ dmypy.json
 .fzf.bash
 .fzf.zsh
 .fzf
-
-# Output files for evals.
-evaluations/images/
-evaluations/corrected_outputs/
-evaluations/gpqa_outputs/
-evaluations/output/
-evaluations/outputs/
